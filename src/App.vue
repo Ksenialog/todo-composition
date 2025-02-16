@@ -39,9 +39,18 @@
           v-for="(item, index) in todos"
           :key="item.id"
           @drop="onDrop($event, item.id)"
-          @dragenter.prevent
+          @dragenter="onDragEnter(item.id)"
           @dragover.prevent
         >
+
+          <v-divider v-if="index !== 0 && item.id !== droppedTodoId" />
+          <v-divider
+            v-else-if="transferringTodoId !== item.id && (index !== 0 && item.id === droppedTodoId) || (index === 0 && item.id === droppedTodoId)"
+            :thickness="5"
+            class="border-opacity-50 rounded"
+            color="success"
+          />
+
           <v-list-item
             :ref="(el) => dragImages[item.id] = el"
             :value="item"
@@ -77,6 +86,7 @@
                 aria-label="transfer todo item"
                 draggable="true"
                 @dragstart="onDragStart($event, item.id)"
+                @dragend="onDragEnd"
               />
             </template>
           </v-list-item>
@@ -96,6 +106,8 @@ const counter = ref(1)
 const inputModelValue = ref('')
 const todos = ref([])
 const dragImages = ref([])
+const transferringTodoId = ref(null)
+const droppedTodoId = ref(null)
 
 const loadPage = () => {
   isLoading.value = true
@@ -119,6 +131,7 @@ const onDragStart = (evt, id) => {
   const buttonWidth = evt.target.clientWidth
   const topGapToButton = (dragImage.clientHeight - buttonHeight) / 2
   const rightGapToButton = 16
+  transferringTodoId.value = id
 
   evt.dataTransfer.dropEffect = 'move'
   evt.dataTransfer.effectAllowed = 'move'
@@ -144,5 +157,16 @@ const onDrop = (evt, droppedId) => {
     return acc
   }, [])
 }
+
+const onDragEnter = (id) => {
+  droppedTodoId.value = id
+}
+
+const onDragEnd = () => {
+  dragImages.value = []
+  transferringTodoId.value = null
+  droppedTodoId.value = null
+}
+
 onMounted(loadPage)
 </script>
